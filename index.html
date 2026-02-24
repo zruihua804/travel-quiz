@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>找到你的命定之城</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f1923;overflow-x:hidden;font-family:'Noto Sans SC','PingFang SC',sans-serif}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(200,168,124,0.2);border-radius:3px}
+::selection{background:rgba(200,168,124,0.3)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ==================== 100个解锁码 ====================
+const VALID_CODES = ["2ERTJ5","2SWJCK","2T2SAL","3A3YLE","3GDPPQ","3J3D55","3MPMSL","3ZT9NT","48DAKX","4C6HQV","4KX8ED","4V5UYB","4YV9WA","54D8W4","5HGQPJ","68CRC2","6CPAGS","6LWN7Q","6T4UEE","6VKTAK","6VZS4T","6ZRJHW","75KWVE","8LCD5V","8NYCYW","94975F","9F8JDP","9S95AZ","9WQSDH","9WTX42","A764KB","AEEXUG","AGL58J","AGWTHU","AWEQBN","AZL735","CQ99CG","D25VD9","DTJVYG","DW3PCN","E75936","F8CFVX","F8SBH5","GAHR5C","GE7UR3","GL2N24","H4QK3H","H65CHX","H7Q5TB","HBLJG8","HD26PV","HD6HVV","HKCHDJ","HNXKL2","J3QP89","J766MF","JCAT9M","JHTJU6","JLTEHY","JYA7TZ","K6356G","L5ZKKP","L6YJA8","LUHHCW","NA5FG3","NAM258","NH9SCB","NKEP8X","P6UY52","PALXNF","PGTZGK","PJA2WJ","PUS7GY","PUWQQG","PWGYRH","PZTVHH","Q3X9V8","Q86JSF","QEVANU","R63FCS","RGNBN9","TRPZJ5","TYEK8U","TZBUS5","W2W28G","WA22DP","WAJHZX","WJR65C","WL42XH","WMMGJ7","WN9T8D","WVFZFN","XTJWDP","Y2FVZD","YCPTPG","YPZ8J3","ZLVSNU","ZTPAC6","ZX9DNL","ZXMCXL"];
+
+// ==================== CITY VISUALS ====================
+const CITY_VISUALS = {
+  qingdao:      { emoji:"🌊", gradient:"linear-gradient(135deg,#1a3a5c,#2d6a9f,#4a90b8)" },
+  dali:         { emoji:"🏔️", gradient:"linear-gradient(135deg,#2d4a3e,#5a8a72,#8ab4a0)" },
+  chengdu:      { emoji:"🐼", gradient:"linear-gradient(135deg,#3a4a2d,#6b8f4a,#92b86a)" },
+  xiamen:       { emoji:"🏝️", gradient:"linear-gradient(135deg,#1a4a5c,#2d8a9f,#4ab0c8)" },
+  hangzhou:     { emoji:"🌿", gradient:"linear-gradient(135deg,#2a3d2a,#4a7a50,#6aaa78)" },
+  lijiang:      { emoji:"🏯", gradient:"linear-gradient(135deg,#3a2d2d,#7a5a4a,#a88070)" },
+  suzhou:       { emoji:"🌸", gradient:"linear-gradient(135deg,#2d3a4a,#5a7a8a,#8aabb8)" },
+  chongqing:    { emoji:"🌃", gradient:"linear-gradient(135deg,#4a2a1a,#8a4a2a,#c06a30)" },
+  guilin:       { emoji:"⛰️", gradient:"linear-gradient(135deg,#1a3a2a,#3a7a5a,#5aaa7a)" },
+  kunming:      { emoji:"🌺", gradient:"linear-gradient(135deg,#3a2d4a,#7a5a8a,#a88ac0)" },
+  lhasa:        { emoji:"🙏", gradient:"linear-gradient(135deg,#2a3a5a,#5a7aaa,#8aaade)" },
+  harbin:       { emoji:"❄️", gradient:"linear-gradient(135deg,#1a2a3a,#4a6a8a,#8aaabe)" },
+  beijing:      { emoji:"🏛️", gradient:"linear-gradient(135deg,#5a1a1a,#8a3a2a,#b05a3a)" },
+  shanghai:     { emoji:"🌆", gradient:"linear-gradient(135deg,#1a1a3a,#3a3a7a,#5a5ab0)" },
+  guangzhou:    { emoji:"🌙", gradient:"linear-gradient(135deg,#3a2a1a,#7a5a3a,#b08a5a)" },
+  shenzhen:     { emoji:"🏙️", gradient:"linear-gradient(135deg,#0a2a3a,#1a5a7a,#2a8ab0)" },
+  sanya:        { emoji:"🏖️", gradient:"linear-gradient(135deg,#0a3a4a,#1a7a8a,#2abac0)" },
+  xishuangbanna:{ emoji:"🌴", gradient:"linear-gradient(135deg,#1a3a1a,#3a7a2a,#5ab03a)" },
+  luoyang:      { emoji:"🌷", gradient:"linear-gradient(135deg,#4a2a3a,#8a4a6a,#c07a9a)" },
+  changsha:     { emoji:"🌶️", gradient:"linear-gradient(135deg,#4a1a1a,#8a3a1a,#c05a2a)" },
+  wuhan:        { emoji:"🌉", gradient:"linear-gradient(135deg,#2a2a3a,#5a5a7a,#8a8ab0)" },
+  quanzhou:     { emoji:"⛵", gradient:"linear-gradient(135deg,#2a3a3a,#4a7a7a,#6aaab0)" },
+  zhangjiajie:  { emoji:"🗻", gradient:"linear-gradient(135deg,#1a2a1a,#3a5a3a,#5a8a5a)" },
+  nanjing:      { emoji:"🍂", gradient:"linear-gradient(135deg,#3a3a1a,#6a6a3a,#9a9a5a)" },
+};
+
+// ==================== CITY DATABASE ====================
+const CITIES = [
+  { id:"qingdao",name:"青岛",tagline:"红瓦绿树，碧海蓝天",image:"https://images.pexels.com/photos/16864552/pexels-photo-16864552.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["海滨","欧式建筑","啤酒","慢节奏"],
+    brief:"青岛是中国最优雅的海滨城市之一。德式老建筑与蔚蓝海岸线完美融合，八大关的万国建筑博物馆、小鱼山上俯瞰红瓦绿树的全景、栈桥旁的海鸥与落日——这座城市拥有独特的欧式浪漫与海洋气质。不急不躁的城市节奏，让每一天都像度假。",
+    scores:{sea:3,mountain:0,lake:0,desert:0,european:3,ancient:0,modern:1,ethnic:0,slow:2,explore:2,intense:1,wild:1,spicy:0,fresh:3,diverse:2,cafe:2,avoid:1,okay:2,love:1,offbeat:0,blue:3,green:1,warm:1,gray:0},
+    itinerary:[
+      {day:1,title:"初见青岛·老城漫步",activities:["抵达青岛，入住老城区精品酒店","漫步中山路，感受百年商业街","栈桥看海鸥，远眺小青岛灯塔","劈柴院品尝青岛街头小吃","信号山公园登顶，俯瞰红瓦绿树全景"]},
+      {day:2,title:"八大关·万国建筑",activities:["探访八大关景区，走遍林荫道","参观花石楼、公主楼等代表性建筑","第二海水浴场漫步沙滩","太平角的咖啡馆发呆看海","第三海水浴场看落日"]},
+      {day:3,title:"崂山问道·山海之间",activities:["前往崂山风景区","仰口游览区，山海交汇处的奇石与云海","品尝崂山绿茶和农家宴","太清宫线路，感受道教文化","台东夜市觅食"]},
+      {day:4,title:"小鱼山·文艺青岛",activities:["青岛啤酒博物馆","小鱼山公园登顶拍全景","鱼山路、大学路文艺街区闲逛","骆驼祥子博物馆与老舍故居","奥帆中心看夕阳"]},
+      {day:5,title:"西海岸·告别之旅",activities:["金沙滩，青岛最好的沙滩","正宗海鲜大餐","即墨古城或青岛市博物馆","五四广场与「五月的风」雕塑","带上几瓶青岛啤酒踏上归途"]},
+    ]},
+  { id:"dali",name:"大理",tagline:"风花雪月，自在如风",image:"https://images.pexels.com/photos/2387871/pexels-photo-2387871.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["苍山洱海","白族文化","文艺","慢生活"],
+    brief:"大理是中国最具波西米亚气质的城市。苍山雪、洱海月、下关风、上关花——「风花雪月」不只是形容词，而是这座城市的日常。白族扎染的蓝白色调浸润着整座古城，环海公路上骑行的自由感、人民路上的手工艺人——大理让人想留下来。",
+    scores:{sea:0,mountain:2,lake:3,desert:0,european:0,ancient:2,modern:0,ethnic:3,slow:3,explore:2,intense:0,wild:2,spicy:1,fresh:1,diverse:2,cafe:3,avoid:2,okay:2,love:0,offbeat:2,blue:2,green:3,warm:1,gray:0},
+    itinerary:[
+      {day:1,title:"古城初探·人民路漫游",activities:["入住古城内白族风格客栈","人民路逛独立书店和手工艺品店","复兴路欣赏白族「三坊一照壁」","五华楼登顶看古城与苍山","夜晚古城酒吧听民谣"]},
+      {day:2,title:"环洱海·追风的一天",activities:["租电动车环洱海东线","双廊古镇打卡","挖色镇海鸥与公路大片","小普陀迷你岛屿寺庙","环海西路洱海落日"]},
+      {day:3,title:"苍山行·云上漫步",activities:["苍山大索道上感通寺站","徒步玉带云游路","远眺洱海全景","天龙八部影视城","白族特色「土八碗」"]},
+      {day:4,title:"喜洲古镇·田园牧歌",activities:["喜洲古镇白族建筑","严家大院经典民居","喜洲粑粑","稻田间骑行","周城体验白族扎染"]},
+      {day:5,title:"沙溪古镇·时光尽头",activities:["茶马古道上最完整的古集市","寺登街漫步","古戏台、老马店","玉津桥看黑潓江","带走一块扎染布"]},
+    ]},
+  { id:"chengdu",name:"成都",tagline:"来了就不想走的城市",image:"https://images.pexels.com/photos/7571166/pexels-photo-7571166.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["美食天堂","茶馆文化","熊猫","烟火气"],
+    brief:"成都是一座让所有感官都满足的城市。宽窄巷子的老成都韵味、人民公园里喝盖碗茶的悠闲下午、春熙路的时尚与活力——最重要的是：这里可能是全中国最好吃的城市，火锅、串串、兔头、甜水面……每一餐都是味蕾的狂欢。",
+    scores:{sea:0,mountain:1,lake:0,desert:0,european:0,ancient:2,modern:2,ethnic:1,slow:2,explore:3,intense:2,wild:0,spicy:3,fresh:0,diverse:3,cafe:2,avoid:0,okay:2,love:3,offbeat:0,blue:0,green:1,warm:3,gray:0},
+    itinerary:[
+      {day:1,title:"市井成都·烟火人间",activities:["宽窄巷子老成都氛围","人民公园鹤鸣茶社喝盖碗茶","奎星楼街本地美食街","玉林路小酒馆","第一顿火锅"]},
+      {day:2,title:"国宝之旅·熊猫与博物",activities:["大熊猫繁育研究基地","四川博物院或金沙遗址","春熙路太古里逛街","九眼桥酒吧街","川西小吃宵夜"]},
+      {day:3,title:"舌尖成都·味蕾爆炸",activities:["建设路小吃街","正宗九宫格火锅","东郊记忆或方所书店","锦里古街漫步","武侯祠三国文化"]},
+      {day:4,title:"文艺成都·设计与禅",activities:["文殊院闹市中的净土","文殊坊文创小店","担担面甜水面","铁像寺水街","川剧变脸表演"]},
+      {day:5,title:"青城山·天下幽",activities:["高铁30分钟到青城山","前山道教圣地","青城山老腊肉","顺访都江堰","带上火锅底料回家"]},
+    ]},
+  { id:"xiamen",name:"厦门",tagline:"海上花园，小资之城",image:"https://images.pexels.com/photos/2846076/pexels-photo-2846076.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["鼓浪屿","闽南文化","小清新","海鲜"],
+    brief:"厦门是中国最文艺的海岛城市。鼓浪屿上万国建筑与钢琴声交织，中山路的骑楼下藏着老厦门的记忆，曾厝垵的民宿和涂鸦墙是文青的天堂。闽南红砖古厝、南普陀的梵音、环岛路的海风——厦门像一首温柔的歌。",
+    scores:{sea:3,mountain:0,lake:0,desert:0,european:2,ancient:1,modern:1,ethnic:1,slow:3,explore:2,intense:1,wild:0,spicy:0,fresh:3,diverse:2,cafe:3,avoid:1,okay:2,love:1,offbeat:0,blue:3,green:1,warm:2,gray:0},
+    itinerary:[
+      {day:1,title:"鼓浪屿·万国音符",activities:["上岛鼓浪屿","日光岩俯瞰全岛","菽庄花园海上钢琴","各国领事馆旧址老别墅","岛上安静巷子散步"]},
+      {day:2,title:"老厦门·骑楼时光",activities:["中山路百年骑楼","八市吃海鲜","沙坡尾艺术区","演武大桥观景平台落日","曾厝垵夜市"]},
+      {day:3,title:"南普陀·闽南古韵",activities:["南普陀寺","五老峰远眺大海","厦大芙蓉隧道涂鸦","华新路老别墅咖啡","环岛路骑行"]},
+      {day:4,title:"集美·嘉庚精神",activities:["集美学村","鳌园闽南石雕","龙舟池嘉庚建筑","园博苑","闽南小吃"]},
+      {day:5,title:"土楼·世界遗产",activities:["南靖土楼一日游","田螺坑土楼群","裕昌楼东倒西歪","塔下村小桥流水","带上凤梨酥和馅饼"]},
+    ]},
+  { id:"hangzhou",name:"杭州",tagline:"人间天堂，诗画江南",image:"https://images.pexels.com/photos/2846217/pexels-photo-2846217.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["西湖","宋韵文化","茶文化","江南"],
+    brief:"杭州是中国最有诗意的城市。西湖的「淡妆浓抹总相宜」是真实的四季风景。龙井茶园的春风、灵隐寺的梵钟、南宋御街的古意、钱塘江的壮阔——千年与当代共存得如此自然。",
+    scores:{sea:0,mountain:1,lake:3,desert:0,european:0,ancient:2,modern:2,ethnic:0,slow:2,explore:3,intense:2,wild:0,spicy:0,fresh:2,diverse:2,cafe:2,avoid:0,okay:3,love:2,offbeat:0,blue:0,green:3,warm:1,gray:1},
+    itinerary:[
+      {day:1,title:"西湖·十景初遇",activities:["骑行西湖苏堤断桥","花港观鱼","雷峰塔俯瞰西湖","三潭映月日落","湖边散步"]},
+      {day:2,title:"灵隐·问茶龙井",activities:["灵隐寺上香","飞来峰石窟","梅家坞品龙井","九溪烟树徒步","满觉陇桂花"]},
+      {day:3,title:"宋韵·古都寻踪",activities:["河坊街南宋御街","胡庆余堂","西湖醋鱼东坡肉","丝绸博物馆","南山路咖啡街"]},
+      {day:4,title:"运河·烟火人间",activities:["京杭大运河","拱宸桥历史街区","小河直街市井","良渚古城遗址","5000年文明曙光"]},
+      {day:5,title:"西溪·城市之肺",activities:["西溪湿地摇橹船","芦苇荡世外桃源","千岛湖（可选）","湖滨银泰","带上龙井茶离开"]},
+    ]},
+
+  { id:"lijiang",name:"丽江",tagline:"雪山下的纳西古城",image:"https://images.pexels.com/photos/1486222/pexels-photo-1486222.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["玉龙雪山","纳西文化","古城","高原"],
+    brief:"丽江是中国最有异域感的古城。玉龙雪山终年白雪，纳西族东巴文是世界唯一还在使用的象形文字，四方街上的马帮记忆、束河古镇的宁静——当你抬头看到雪山的那一刻，一切都值了。",
+    scores:{sea:0,mountain:3,lake:1,desert:0,european:0,ancient:3,modern:0,ethnic:3,slow:2,explore:2,intense:1,wild:2,spicy:1,fresh:0,diverse:1,cafe:2,avoid:0,okay:1,love:2,offbeat:1,blue:0,green:1,warm:3,gray:0},
+    itinerary:[
+      {day:1,title:"古城·邂逅丽江",activities:["入住纳西风格客栈","四方街漫步","大水车","万古楼看古城与雪山","古城酒吧街"]},
+      {day:2,title:"玉龙雪山·触摸天空",activities:["大索道至4506米冰川公园","蓝月谷蓝绿湖水","甘海子草甸","《印象丽江》","雪山日落"]},
+      {day:3,title:"束河·茶马古道",activities:["束河古镇","九鼎龙潭","茶马古道博物馆","手工皮具店","白沙古镇壁画"]},
+      {day:4,title:"拉市海·田园诗意",activities:["拉市海骑马","冬季候鸟","纳西族东巴文化","学写东巴象形文字","东巴纸坊"]},
+      {day:5,title:"泸沽湖·女儿国",activities:["泸沽湖（可选4小时车程）","里格半岛","摩梭走婚桥","猪槽船","或自由闲逛后离开"]},
+    ]},
+  { id:"suzhou",name:"苏州",tagline:"园林之城，人间姑苏",image:"https://images.pexels.com/photos/3566187/pexels-photo-3566187.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["古典园林","昆曲","苏绣","江南水乡"],
+    brief:"苏州是中国审美的巅峰之城。拙政园的移步换景、留园的窗中画、网师园的月到风来亭——苏州园林是中国人对「诗意栖居」的终极回答。平江路的小桥流水、评弹的婉转——需要慢慢品味的城市。",
+    scores:{sea:0,mountain:0,lake:1,desert:0,european:0,ancient:3,modern:1,ethnic:0,slow:3,explore:2,intense:2,wild:0,spicy:0,fresh:2,diverse:1,cafe:1,avoid:1,okay:2,love:1,offbeat:1,blue:0,green:2,warm:2,gray:2},
+    itinerary:[
+      {day:1,title:"园林·移步换景",activities:["拙政园四大名园之首","框景艺术","狮子林假山迷宫","平江路小桥流水","评弹表演"]},
+      {day:2,title:"姑苏·古城韵味",activities:["留园建筑空间","苏式汤面","山塘街七里","虎丘第一名胜","夜游护城河"]},
+      {day:3,title:"水乡·枕水而居",activities:["同里或周庄古镇","退思园","手摇船水巷","袜底酥万三蹄","江南水乡生活"]},
+      {day:4,title:"新苏州·古今交融",activities:["苏州博物馆贝聿铭之作","忠王府","金鸡湖","诚品书店","现代苏州"]},
+      {day:5,title:"丝绸·匠心之旅",activities:["丝绸博物馆","苏绣双面绣","网师园宋代园林","观前街采买","带上碧螺春离开"]},
+    ]},
+  { id:"chongqing",name:"重庆",tagline:"8D魔幻城市，火辣山城",image:"https://images.pexels.com/photos/3225528/pexels-photo-3225528.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["山城地形","火锅","赛博朋克","魔幻"],
+    brief:"重庆是中国最魔幻的城市。建在山上的城市让导航失灵，轻轨穿楼而过，立交桥层层叠叠。洪崖洞像《千与千寻》，火锅的麻辣是全城底味。每一个转角都可能是惊喜。",
+    scores:{sea:0,mountain:2,lake:0,desert:0,european:0,ancient:1,modern:2,ethnic:0,slow:0,explore:3,intense:3,wild:1,spicy:3,fresh:0,diverse:3,cafe:1,avoid:0,okay:1,love:3,offbeat:0,blue:0,green:0,warm:3,gray:0},
+    itinerary:[
+      {day:1,title:"魔幻重庆·初体验",activities:["洪崖洞夜景","解放碑步行街","长江索道","较场口夜市","第一顿火锅"]},
+      {day:2,title:"山城步道·爬坡上坎",activities:["山城步道徒步","十八梯风貌区","李子坝轻轨穿楼","鹅岭二厂文创","南山一棵树夜景"]},
+      {day:3,title:"磁器口·古镇麻辣",activities:["磁器口古镇","陈麻花毛血旺","中山四路最美街道","九宫格老火锅","江边散步"]},
+      {day:4,title:"两江·峡谷之城",activities:["朝天门两江交汇","两江游船","大剧院现代建筑","三峡博物馆","来福士空中连廊"]},
+      {day:5,title:"武隆·地心探险",activities:["武隆天生三桥","龙水峡地缝","仙女山草原","返回重庆","最后一碗小面"]},
+    ]},
+  { id:"guilin",name:"桂林",tagline:"山水甲天下",image:"https://images.pexels.com/photos/2187605/pexels-photo-2187605.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["喀斯特地貌","漓江","阳朔","田园"],
+    brief:"桂林是中国山水画的原型。喀斯特地貌造就的峰林与漓江共同构成水墨长卷。竹筏漂流在漓江上，两岸山峰像水墨画里走出来的。阳朔的遇龙河更加宁静，十里画廊骑行，让桂林不止有风景，还有生活。",
+    scores:{sea:0,mountain:2,lake:1,desert:0,european:0,ancient:1,modern:0,ethnic:1,slow:2,explore:2,intense:1,wild:3,spicy:1,fresh:1,diverse:1,cafe:1,avoid:2,okay:2,love:0,offbeat:1,blue:0,green:3,warm:1,gray:0},
+    itinerary:[
+      {day:1,title:"桂林市区·两江四湖",activities:["象鼻山","东西巷","靖江王府独秀峰","夜游两江四湖","桂林米粉"]},
+      {day:2,title:"漓江·水墨长卷",activities:["乘船桂林到阳朔","九马画山黄布倒影","20元人民币背景","西街中西融合","阳朔啤酒鱼"]},
+      {day:3,title:"阳朔·田园骑行",activities:["遇龙河竹筏漂流","十里画廊骑行","月亮山大榕树","《印象刘三姐》","田园风光"]},
+      {day:4,title:"兴坪·相公山",activities:["相公山漓江日出","兴坪古镇","老寨山徒步","银子岩溶洞","阳朔夜生活"]},
+      {day:5,title:"龙脊·梯田奇观",activities:["龙脊梯田","金坑大寨","壮族瑶族风情","梯田全景","带上桂花糕离开"]},
+    ]},
+  { id:"kunming",name:"昆明",tagline:"春城无处不飞花",image:"https://images.pexels.com/photos/931177/pexels-photo-931177.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["四季如春","民族多样","鲜花","高原湖泊"],
+    brief:"昆明是中国最舒适的城市。海拔1891米带来永恒的春天，蓝天白云是日常标配。翠湖的红嘴鸥、斗南的鲜花市场、26个民族的文化在这里交融，每一天都色彩斑斓。",
+    scores:{sea:0,mountain:1,lake:2,desert:0,european:1,ancient:1,modern:1,ethnic:2,slow:3,explore:2,intense:0,wild:1,spicy:1,fresh:1,diverse:2,cafe:2,avoid:2,okay:2,love:1,offbeat:1,blue:1,green:2,warm:1,gray:0},
+    itinerary:[
+      {day:1,title:"春城·花与海鸥",activities:["翠湖公园红嘴鸥","云大银杏大道","陆军讲武堂","南屏街","过桥米线"]},
+      {day:2,title:"滇池·高原明珠",activities:["西山龙门","滇池全景","海埂大坝海鸥","云南民族村","滇池落日"]},
+      {day:3,title:"石林·亿年奇观",activities:["石林世界自然遗产","2.7亿年喀斯特","大小石林","阿诗玛传说","汽锅鸡"]},
+      {day:4,title:"鲜花与老街",activities:["斗南花卉市场","9.9元一大把鲜花","官渡古镇","昆明老街","建新园米线"]},
+      {day:5,title:"抚仙湖·高原海",activities:["抚仙湖中国最大深水湖","蓝绿色清澈见底","禄充沙滩","月亮湾湖景","带上鲜花饼离开"]},
+    ]},
+
+  { id:"lhasa",name:"拉萨",tagline:"日光之城，信仰之地",image:"https://images.pexels.com/photos/3408353/pexels-photo-3408353.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["藏传佛教","布达拉宫","高原","信仰"],
+    brief:"拉萨是中国最有精神力量的城市。布达拉宫的庄严让人屏息，大昭寺门前的长跪磕头令人动容，八廓街转经筒的声音是千年不断的信仰回响。海拔3650米，阳光纯粹得刺眼——来到拉萨，是一次与自己的对话。",
+    scores:{sea:0,mountain:3,lake:1,desert:2,european:0,ancient:2,modern:0,ethnic:3,slow:2,explore:2,intense:1,wild:3,spicy:1,fresh:0,diverse:1,cafe:1,avoid:2,okay:1,love:0,offbeat:3,blue:1,green:0,warm:2,gray:0},
+    itinerary:[
+      {day:1,title:"抵达·适应高原",activities:["适应海拔3650米","大昭寺广场","酥油茶","慢慢散步","早点休息"]},
+      {day:2,title:"布达拉宫·云上圣殿",activities:["布达拉宫（提前预约）","白宫红宫","宗角禄康公园","药王山观景台","布宫夜景"]},
+      {day:3,title:"八廓街·信仰之路",activities:["大昭寺","顺时针转八廓街","玛吉阿米","色拉寺辩经","拉萨河散步"]},
+      {day:4,title:"纳木错·圣湖之旅",activities:["纳木错海拔4718米","蓝如宝石","念青唐古拉山","扎西半岛经幡","量力而行"]},
+      {day:5,title:"最后的时光",activities:["哲蚌寺","罗布林卡夏宫","八廓街买唐卡","甜茶馆","带走信仰留下脚印"]},
+    ]},
+  { id:"harbin",name:"哈尔滨",tagline:"东方莫斯科，冰雪童话",image:"https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["冰雪","俄式建筑","东北文化","冬季限定"],
+    brief:"哈尔滨是中国最有异国情调的北方城市。索菲亚大教堂的洋葱顶、中央大街的欧式建筑群、马迭尔冰棍的百年传承。冬天的冰雪大世界是绝对的视觉奇观——零下30度的浪漫，值得专程来一次。",
+    scores:{sea:0,mountain:0,lake:0,desert:2,european:3,ancient:0,modern:1,ethnic:1,slow:0,explore:2,intense:3,wild:2,spicy:0,fresh:0,diverse:2,cafe:1,avoid:0,okay:2,love:3,offbeat:1,blue:1,green:0,warm:0,gray:3},
+    itinerary:[
+      {day:1,title:"中央大街·百年风华",activities:["中央大街漫步","马迭尔冰棍","圣索菲亚大教堂","华梅西餐厅俄式大餐","冰雪初体验"]},
+      {day:2,title:"冰雪大世界",activities:["太阳岛雪博会","冰雪大世界冬季限定","巨型冰建筑","冰滑梯冰迷宫","极寒之夜"]},
+      {day:3,title:"老道外·东北烟火",activities:["老道外巴洛克街区","东北早餐炖菜","松花江冰面行走","斯大林公园","防洪纪念塔"]},
+      {day:4,title:"东北虎·冰上运动",activities:["东北虎林园","锅包肉地三鲜","松花江冰上活动","师大夜市","烤冷面糖葫芦"]},
+      {day:5,title:"伏尔加庄园",activities:["伏尔加庄园","白雪中的童话","圣尼古拉教堂","俄式下午茶","带上红肠大列巴"]},
+    ]},
+  { id:"beijing",name:"北京",tagline:"千年帝都，天下之中",image:"https://images.pexels.com/photos/22609440/pexels-photo-22609440.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["故宫","胡同文化","皇城","国际都市"],
+    brief:"北京是中国历史的最高浓度。故宫的600年红墙黄瓦、天坛的穹顶回音、胡同里的四合院和鸽哨——这座城市每一块砖都有故事。同时它也是最前卫的：798艺术区、国家大剧院、三里屯的国际范儿，古老与先锋在这里碰撞出独特的张力。",
+    scores:{sea:0,mountain:1,lake:0,desert:0,european:0,ancient:3,modern:3,ethnic:0,slow:0,explore:3,intense:3,wild:0,spicy:1,fresh:1,diverse:3,cafe:2,avoid:0,okay:1,love:3,offbeat:0,blue:0,green:0,warm:2,gray:2},
+    itinerary:[
+      {day:1,title:"紫禁城·皇家气象",activities:["故宫博物院（至少半天）","太和殿乾清宫","珍宝馆钟表馆","景山公园俯瞰故宫全景","王府井或前门大栅栏"]},
+      {day:2,title:"长城·万里雄关",activities:["慕田峪或八达岭长城","「不到长城非好汉」","长城上看群山连绵","晚上鸟巢水立方","簋街夜宵一条街"]},
+      {day:3,title:"胡同·老北京魂",activities:["南锣鼓巷到烟袋斜街","后海什刹海散步","恭王府和珅故居","钟鼓楼登高","北京涮羊肉铜锅"]},
+      {day:4,title:"文化·古今交融",activities:["天坛公园祈年殿","国家博物馆","798艺术区当代艺术","三里屯太古里","北京烤鸭全聚德或四季民福"]},
+      {day:5,title:"颐和园·皇家园林",activities:["颐和园昆明湖万寿山","长廊十七孔桥","圆明园遗址","清华北大校园","带上稻香村糕点离开"]},
+    ]},
+  { id:"shanghai",name:"上海",tagline:"魔都不夜城，东方巴黎",image:"https://images.pexels.com/photos/7883869/pexels-photo-7883869.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["外滩","摩登","海派文化","国际都市"],
+    brief:"上海是中国最摩登的城市。外滩万国建筑群与陆家嘴天际线隔江对望，一边是百年租界的优雅，一边是未来感的摩天大楼。法租界的梧桐小路、武康大楼的上海老克勒、衡山路的咖啡馆——上海是中国最有腔调的城市。",
+    scores:{sea:1,mountain:0,lake:0,desert:0,european:3,ancient:1,modern:3,ethnic:0,slow:1,explore:3,intense:2,wild:0,spicy:0,fresh:2,diverse:3,cafe:3,avoid:0,okay:1,love:3,offbeat:0,blue:0,green:0,warm:1,gray:3},
+    itinerary:[
+      {day:1,title:"外滩·百年风华",activities:["外滩万国建筑群","陆家嘴天际线","和平饭店","南京路步行街","外滩夜景"]},
+      {day:2,title:"法租界·梧桐深处",activities:["武康路武康大楼","安福路文艺小店","思南公馆","衡山路咖啡馆","上海老洋房"]},
+      {day:3,title:"豫园·海派文化",activities:["豫园老城隍庙","南翔小笼包","田子坊","上海博物馆","新天地"]},
+      {day:4,title:"浦东·未来之城",activities:["上海中心大厦118层","东方明珠","浦东美术馆","陆家嘴滨江步道","世博园区"]},
+      {day:5,title:"周边·水乡一日",activities:["朱家角或西塘古镇","水乡小桥乌篷船","回上海逛淮海路","1933老场坊","带上蝴蝶酥离开"]},
+    ]},
+  { id:"guangzhou",name:"广州",tagline:"食在广州，千年商都",image:"https://images.pexels.com/photos/21774040/pexels-photo-21774040.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["粤菜之都","骑楼","早茶文化","烟火气"],
+    brief:"广州是中国最会吃的城市。早茶的虾饺、肠粉、叉烧包是一天最幸福的开始，上下九的骑楼、永庆坊的西关大屋、沙面的欧式建筑——广州是一座被低估的城市，它不张扬，但生活气息浓烈到让人上瘾。两千年的商都底蕴，让这座城市既市井又国际。",
+    scores:{sea:0,mountain:0,lake:0,desert:0,european:1,ancient:1,modern:2,ethnic:1,slow:1,explore:3,intense:2,wild:0,spicy:0,fresh:3,diverse:3,cafe:2,avoid:0,okay:2,love:2,offbeat:0,blue:0,green:1,warm:3,gray:0},
+    itinerary:[
+      {day:1,title:"早茶·一盅两件",activities:["广州酒家或点都德吃早茶","虾饺凤爪肠粉","上下九步行街骑楼","陈家祠岭南建筑瑰宝","西关大屋"]},
+      {day:2,title:"沙面·百年租界",activities:["沙面岛欧式建筑群","永庆坊活化老街区","粤剧艺术博物馆","恩宁路铜器街","荔枝湾涌水乡"]},
+      {day:3,title:"珠江·新旧广州",activities:["广州塔小蛮腰","珠江夜游","花城广场","广东省博物馆","珠江新城CBD"]},
+      {day:4,title:"老广味道·市井寻味",activities:["北京路千年古道","文明路甜品一条街","东山口老洋房","红砖厂创意园","夜晚大排档"]},
+      {day:5,title:"岭南·园林与美食",activities:["余荫山房岭南园林","沙湾古镇","姜撞奶双皮奶","最后一顿早茶","带上广式腊味离开"]},
+    ]},
+
+  { id:"shenzhen",name:"深圳",tagline:"未来之城，创新前沿",image:"https://images.pexels.com/photos/1434580/pexels-photo-1434580.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["科技之城","设计之都","海滨","年轻活力"],
+    brief:"深圳是中国最年轻也最有未来感的城市。40年从渔村变国际都市，这里有全中国最好的当代建筑和设计场馆。大芬油画村的创意、蛇口海上世界的国际范、南澳西涌的原生海岸——深圳证明了「效率」和「品质」可以共存。",
+    scores:{sea:2,mountain:0,lake:0,desert:0,european:0,ancient:0,modern:3,ethnic:0,slow:0,explore:2,intense:2,wild:1,spicy:0,fresh:2,diverse:3,cafe:2,avoid:0,okay:2,love:2,offbeat:1,blue:1,green:0,warm:0,gray:3},
+    itinerary:[
+      {day:1,title:"未来·深圳速度",activities:["莲花山公园俯瞰CBD","市民中心深圳博物馆","华强北电子市场","福田CBD","深圳湾公园日落"]},
+      {day:2,title:"设计·文创之城",activities:["海上世界文化艺术中心","蛇口设计互联","南头古城活化项目","大芬油画村","夜晚华侨城创意园"]},
+      {day:3,title:"海岸·城市绿洲",activities:["大鹏半岛较场尾","西涌沙滩","东山寺古迹","海边咖啡馆","海鲜大餐"]},
+      {day:4,title:"跨境·双城记",activities:["深圳湾看港深天际线","欢乐港湾摩天轮","万象天地","华润城当代美术馆","夜生活"]},
+      {day:5,title:"自然·城市后花园",activities:["梧桐山深圳最高峰","仙湖植物园","东门老街","最后逛逛书城","带上潮汕牛肉丸离开"]},
+    ]},
+  { id:"sanya",name:"三亚",tagline:"中国的马尔代夫",image:"https://images.pexels.com/photos/1174732/pexels-photo-1174732.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["热带海滩","椰林","冲浪","度假"],
+    brief:"三亚是中国最接近东南亚度假感的城市。亚龙湾的翡翠色海水、蜈支洲岛的珊瑚礁、后海村的冲浪文化——三亚不只是「老年团」的目的地，年轻人正在重新定义这座城市。椰梦长廊的落日、南山海上观音的庄严，让三亚兼具度假的慵懒与自然的壮美。",
+    scores:{sea:3,mountain:0,lake:0,desert:0,european:0,ancient:0,modern:1,ethnic:1,slow:3,explore:1,intense:1,wild:3,spicy:0,fresh:3,diverse:1,cafe:1,avoid:1,okay:2,love:1,offbeat:1,blue:3,green:1,warm:1,gray:0},
+    itinerary:[
+      {day:1,title:"海湾·碧海蓝天",activities:["亚龙湾最美海湾","沙滩发呆","热带天堂森林公园","非诚勿扰同款吊桥","海鲜第一餐"]},
+      {day:2,title:"蜈支洲·海上乐园",activities:["蜈支洲岛一日","潜水看珊瑚","环岛电瓶车","情人桥","观日岩日落"]},
+      {day:3,title:"后海·冲浪少年",activities:["后海村冲浪","学冲浪入门课","海边咖啡馆","皇后湾浮潜","后海日落酒吧"]},
+      {day:4,title:"南山·海上观音",activities:["南山文化旅游区","108米海上观音","天涯海角打卡","椰梦长廊骑行","落日晚餐"]},
+      {day:5,title:"免税·热带告别",activities:["三亚免税店","第一市场海鲜","大东海最后一游","椰子鸡火锅","带上热带水果离开"]},
+    ]},
+  { id:"xishuangbanna",name:"西双版纳",tagline:"北回归线上的热带雨林",image:"https://images.pexels.com/photos/1643113/pexels-photo-1643113.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["热带雨林","傣族文化","泼水节","异域"],
+    brief:"西双版纳是中国最有东南亚气质的地方。热带雨林的望天树空中走廊、傣族的竹楼和泼水节、野象谷的亚洲象、星光夜市的烧烤——版纳像是中国地图上偷藏的一个泰国，气候温暖，物价友好，适合过冬也适合逃离。",
+    scores:{sea:0,mountain:1,lake:0,desert:0,european:0,ancient:0,modern:0,ethnic:3,slow:2,explore:2,intense:1,wild:3,spicy:1,fresh:1,diverse:2,cafe:1,avoid:2,okay:2,love:0,offbeat:3,blue:0,green:3,warm:2,gray:0},
+    itinerary:[
+      {day:1,title:"告庄·东南亚之夜",activities:["告庄西双景","星光夜市","傣味烧烤","大金塔","湄公河畔散步"]},
+      {day:2,title:"雨林·望天树",activities:["望天树景区","空中走廊36米高","热带雨林徒步","板根奇观","南腊河漂流"]},
+      {day:3,title:"野象谷·与象为邻",activities:["野象谷观象","雨林栈道","中科院热带植物园","绞杀榕见血封喉","傣族手抓饭"]},
+      {day:4,title:"傣族·泼水之乡",activities:["傣族园泼水体验","竹楼参观","曼飞龙白塔","橄榄坝赶集","傣族孔雀舞"]},
+      {day:5,title:"茶山·普洱之旅",activities:["南糯山古茶园","品普洱老茶","基诺族文化","最后逛告庄","带上普洱茶离开"]},
+    ]},
+  { id:"luoyang",name:"洛阳",tagline:"神都千年，牡丹花城",image:"https://images.pexels.com/photos/5709282/pexels-photo-5709282.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["龙门石窟","牡丹","十三朝古都","汉唐文化"],
+    brief:"洛阳是中国古都中最被低估的一座。十三朝古都的底蕴让西安都要敬三分，龙门石窟的卢舍那大佛微笑了1300年，白马寺是中国第一座佛寺。每年四月牡丹花开，整座城市化为花海。洛阳没有过度商业化，保留了中原文化最朴素的样子。",
+    scores:{sea:0,mountain:1,lake:0,desert:0,european:0,ancient:3,modern:0,ethnic:0,slow:1,explore:2,intense:2,wild:0,spicy:1,fresh:0,diverse:2,cafe:0,avoid:1,okay:2,love:1,offbeat:2,blue:0,green:1,warm:3,gray:0},
+    itinerary:[
+      {day:1,title:"龙门·千年微笑",activities:["龙门石窟世界遗产","卢舍那大佛","伊河对岸看全景","香山寺白居易","龙门夜景"]},
+      {day:2,title:"古都·洛邑风华",activities:["洛阳博物馆","应天门隋唐遗址","明堂天堂","洛邑古城","洛阳水席"]},
+      {day:3,title:"白马寺·佛教祖庭",activities:["白马寺中国第一古刹","关林关羽墓","丽景门老街","不翻汤牛肉汤","老城十字街夜市"]},
+      {day:4,title:"牡丹·国色天香",activities:["国家牡丹园（4月限定）","中国国花园","王城公园","隋唐城遗址植物园","洛阳铲体验"]},
+      {day:5,title:"嵩山·少林之旅",activities:["少林寺（约1.5小时）","武术表演","塔林","嵩阳书院","带上牡丹饼离开"]},
+    ]},
+  { id:"changsha",name:"长沙",tagline:"不夜星城，娱乐之都",image:"https://images.pexels.com/photos/1534057/pexels-photo-1534057.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["湘菜","夜生活","芒果台","烟火气"],
+    brief:"长沙是中国最有烟火气和娱乐精神的城市。超级文和友的赛博朋克、坡子街的臭豆腐、太平老街的深夜食堂——长沙人对生活的热情写在凌晨两点依然排队的奶茶店里。橘子洲头的毛主席像、岳麓书院的千年学脉，让长沙不只有热闹，还有底蕴。",
+    scores:{sea:0,mountain:0,lake:0,desert:0,european:0,ancient:1,modern:2,ethnic:0,slow:0,explore:3,intense:3,wild:0,spicy:3,fresh:0,diverse:3,cafe:2,avoid:0,okay:1,love:3,offbeat:0,blue:0,green:0,warm:3,gray:0},
+    itinerary:[
+      {day:1,title:"星城·不夜长沙",activities:["太平老街","坡子街火宫殿","臭豆腐糖油粑粑","IFS国金中心","五一广场夜生活"]},
+      {day:2,title:"橘洲·伟人足迹",activities:["橘子洲头青年毛泽东像","岳麓山爱晚亭","岳麓书院","湖南大学","夜晚渔人码头"]},
+      {day:3,title:"湘菜·辣的艺术",activities:["超级文和友","正宗湘菜馆","湖南省博物馆","马王堆汉墓文物","辛追夫人"]},
+      {day:4,title:"文艺·新长沙",activities:["谢子龙影像馆","李自健美术馆","后湖艺术区","解放西路","凌晨排队茶颜悦色"]},
+      {day:5,title:"周边·韶山之旅",activities:["韶山毛泽东故居（可选）","或天心阁古城墙","杜甫江阁","最后一碗米粉","带上灯芯糕离开"]},
+    ]},
+
+  { id:"wuhan",name:"武汉",tagline:"大江大湖大武汉",image:"https://images.pexels.com/photos/5563472/pexels-photo-5563472.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["长江","热干面","樱花","三镇文化"],
+    brief:"武汉是中国最有江湖气的城市。长江与汉江把城市切成三镇，黄鹤楼上看大江东去，户部巷的热干面是武汉人的一天开始。春天武大樱花、东湖绿道骑行、江汉路的百年建筑——武汉不精致，但大气磅礴，是真正的「大码城市」。",
+    scores:{sea:0,mountain:0,lake:2,desert:0,european:1,ancient:1,modern:2,ethnic:0,slow:0,explore:3,intense:2,wild:0,spicy:2,fresh:1,diverse:3,cafe:1,avoid:0,okay:2,love:2,offbeat:0,blue:0,green:1,warm:2,gray:1},
+    itinerary:[
+      {day:1,title:"三镇·大江大湖",activities:["黄鹤楼「故人西辞黄鹤楼」","长江大桥步行过江","户部巷热干面豆皮","武昌江滩","长江夜景"]},
+      {day:2,title:"武大·珞珈春色",activities:["武汉大学（春天看樱花）","东湖绿道骑行","湖北省博物馆","曾侯乙编钟","楚文化"]},
+      {day:3,title:"汉口·百年租界",activities:["江汉路步行街","汉口租界建筑群","黎黄陂路","汉口江滩","吉庆街夜市"]},
+      {day:4,title:"东湖·城中之海",activities:["东湖磨山景区","楚天台","东湖落雁岛","光谷步行街","武汉鸭脖"]},
+      {day:5,title:"归元·禅与市井",activities:["归元禅寺数罗汉","昙华林文艺老街","古德寺异域建筑","最后一碗热干面","带上周黑鸭离开"]},
+    ]},
+  { id:"quanzhou",name:"泉州",tagline:"宋元中国的世界海洋商贸中心",image:"https://images.pexels.com/photos/3889855/pexels-photo-3889855.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["世界遗产","闽南古城","多元宗教","簪花"],
+    brief:"泉州是中国最被低估的古城。作为宋元时期世界最大港口之一，这里留下了伊斯兰教清净寺、印度教石刻、基督教遗迹与佛道寺庙共存的奇景。开元寺的东西塔、西街的闽南古厝、蟳埔女的簪花——泉州是活着的海上丝绸之路博物馆。",
+    scores:{sea:1,mountain:0,lake:0,desert:0,european:0,ancient:3,modern:0,ethnic:2,slow:2,explore:2,intense:1,wild:0,spicy:0,fresh:2,diverse:1,cafe:1,avoid:2,okay:2,love:0,offbeat:3,blue:0,green:0,warm:3,gray:0},
+    itinerary:[
+      {day:1,title:"古城·千年刺桐",activities:["开元寺东西塔","西街闽南古厝","清净寺伊斯兰教","关岳庙香火最旺","面线糊润饼"]},
+      {day:2,title:"世遗·海丝之路",activities:["泉州海外交通史博物馆","洛阳桥中国四大古桥","九日山祈风石刻","蟳埔村簪花体验","蚵仔煎"]},
+      {day:3,title:"崇武·惠安风情",activities:["崇武古城海边城墙","惠安女传统服饰","石雕之乡","闽南渔村","海鲜大餐"]},
+      {day:4,title:"安溪·茶乡之旅",activities:["安溪铁观音茶园","中国茶都","茶文化体验","永春白鹤拳","闽南功夫茶"]},
+      {day:5,title:"老街·活着的古城",activities:["承天寺清净","府文庙","天后宫妈祖信仰","最后逛西街","带上铁观音离开"]},
+    ]},
+  { id:"zhangjiajie",name:"张家界",tagline:"潘多拉星球在人间",image:"https://images.pexels.com/photos/3389536/pexels-photo-3389536.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["石英砂岩柱","阿凡达","玻璃桥","户外天堂"],
+    brief:"张家界是中国最超现实的自然景观。三千多根石英砂岩柱拔地而起，云雾缭绕时如同外星球——《阿凡达》的悬浮山灵感来源就是这里。天门山的玻璃栈道、大峡谷的玻璃桥，是肾上腺素爱好者的天堂。如果你热爱自然和户外，张家界是必去之地。",
+    scores:{sea:0,mountain:3,lake:0,desert:0,european:0,ancient:0,modern:0,ethnic:1,slow:0,explore:2,intense:2,wild:3,spicy:1,fresh:0,diverse:1,cafe:0,avoid:1,okay:2,love:1,offbeat:2,blue:0,green:3,warm:1,gray:0},
+    itinerary:[
+      {day:1,title:"森林公园·仙境初见",activities:["张家界国家森林公园","金鞭溪沿溪行","金鞭岩","紫草潭","土家三下锅"]},
+      {day:2,title:"袁家界·阿凡达",activities:["百龙天梯上袁家界","乾坤柱（阿凡达悬浮山）","天下第一桥","迷魂台","杨家界乌龙寨"]},
+      {day:3,title:"天子山·峰林之巅",activities:["天子山贺龙公园","御笔峰","仙女散花","十里画廊","索溪峪"]},
+      {day:4,title:"天门山·惊险之旅",activities:["天门山索道7公里","玻璃栈道","天门洞","鬼谷栈道","99道弯通天大道"]},
+      {day:5,title:"大峡谷·玻璃桥",activities:["张家界大峡谷","玻璃桥世界最高","峡谷瀑布","宝峰湖","带上葛根粉离开"]},
+    ]},
+  { id:"nanjing",name:"南京",tagline:"六朝古都，梧桐之城",image:"https://images.pexels.com/photos/2846089/pexels-photo-2846089.jpeg?auto=compress&cs=tinysrgb&w=800",
+    tags:["六朝古都","梧桐大道","民国建筑","文脉深厚"],
+    brief:"南京是中国最有沧桑美感的城市。六朝古都的历史层叠在城市每一个角落——明城墙是世界最长的城墙，中山陵的肃穆、夫子庙的繁华、颐和路的民国风情——南京不炫耀自己的辉煌，而是让你在梧桐树下慢慢感受一座城市的底蕴。",
+    scores:{sea:0,mountain:1,lake:1,desert:0,european:1,ancient:3,modern:1,ethnic:0,slow:2,explore:3,intense:2,wild:0,spicy:1,fresh:1,diverse:2,cafe:1,avoid:0,okay:2,love:2,offbeat:0,blue:0,green:2,warm:2,gray:1},
+    itinerary:[
+      {day:1,title:"明城墙·古都气象",activities:["抵达南京","中华门城堡——明城墙最大的城门","老门东历史街区","秦淮河夫子庙景区","夜游秦淮河画舫"]},
+      {day:2,title:"中山陵·钟山风景",activities:["上午中山陵","明孝陵——世界遗产","灵谷寺和无梁殿","美龄宫——「最美项链」航拍角度","下午钟山风景区漫步"]},
+      {day:3,title:"颐和路·民国风云",activities:["上午颐和路民国建筑群","总统府——中国近代史博物馆","1912街区午餐","下午南京博物院","六朝博物馆"]},
+      {day:4,title:"玄武湖·城市之心",activities:["上午玄武湖公园","鸡鸣寺——南京最古老的佛寺","先锋书店（五台山总店）","下午南京大学鼓楼校区","狮子桥吃鸭血粉丝汤和盐水鸭"]},
+      {day:5,title:"长江·大桥之城",activities:["上午南京长江大桥","南京大屠杀遇难同胞纪念馆","下午雨花台","浦口老火车站","带上盐水鸭离开"]},
+    ]},
+];
+
+// ==================== QUESTIONS ====================
+const QUESTIONS = [
+  { id:"landscape",question:"你更喜欢哪种自然风光？",subtitle:"闭上眼睛，想象你最放松的画面",
+    options:[{id:"sea",label:"海岸与沙滩",emoji:"🌊",desc:"听浪声入眠"},{id:"mountain",label:"山川与峡谷",emoji:"🏔️",desc:"云雾缭绕间"},{id:"lake",label:"湖泊与湿地",emoji:"🌅",desc:"平静如镜面"},{id:"desert",label:"草原与荒野",emoji:"🌾",desc:"天地间自由"}]},
+  { id:"architecture",question:"什么样的建筑让你走不动路？",subtitle:"那种忍不住拍照的建筑",
+    options:[{id:"european",label:"欧式洋楼",emoji:"🏛️",desc:"殖民时期的浪漫"},{id:"ancient",label:"古城古镇",emoji:"🏯",desc:"千年的烟火气"},{id:"modern",label:"现代设计",emoji:"🏙️",desc:"先锋的线条感"},{id:"ethnic",label:"民族风情",emoji:"🛖",desc:"原生的在地感"}]},
+  { id:"vibe",question:"你理想的旅行节奏是？",subtitle:"旅行的本质是一种生活方式",
+    options:[{id:"slow",label:"慢悠悠地晃",emoji:"☕",desc:"咖啡馆坐一下午"},{id:"explore",label:"到处逛逛看",emoji:"🚶",desc:"街头巷尾都想去"},{id:"intense",label:"每天排满行程",emoji:"📋",desc:"不想错过任何景点"},{id:"wild",label:"户外冒险型",emoji:"🧗",desc:"徒步、骑行、潜水"}]},
+  { id:"food",question:"你对美食的态度是？",subtitle:"一座城市的灵魂藏在餐桌上",
+    options:[{id:"spicy",label:"无辣不欢",emoji:"🌶️",desc:"越辣越过瘾"},{id:"fresh",label:"清淡鲜美",emoji:"🦐",desc:"食材本味就好"},{id:"diverse",label:"什么都想试",emoji:"🍜",desc:"街边小摊到餐厅"},{id:"cafe",label:"咖啡甜品控",emoji:"🍰",desc:"氛围比食物重要"}]},
+  { id:"crowd",question:"你对人多这件事的态度？",subtitle:"这决定了你的旅行体验",
+    options:[{id:"avoid",label:"人少最重要",emoji:"🧘",desc:"讨厌人挤人"},{id:"okay",label:"适度就好",emoji:"👥",desc:"有点热闹不错"},{id:"love",label:"热闹才好玩",emoji:"🎉",desc:"喜欢城市的活力"},{id:"offbeat",label:"只去小众地方",emoji:"🗺️",desc:"去没人知道的地方"}]},
+  { id:"aesthetic",question:"哪种城市色调最吸引你？",subtitle:"颜色是一座城市的性格",
+    options:[{id:"blue",label:"蓝白色调",emoji:"💙",desc:"海天一色的清爽"},{id:"green",label:"青绿色调",emoji:"💚",desc:"山水间的润泽"},{id:"warm",label:"暖黄色调",emoji:"🧡",desc:"老城的温暖光影"},{id:"gray",label:"灰白色调",emoji:"🤍",desc:"现代简约的高级感"}]},
+];
+
+// ==================== SCORING ENGINE ====================
+function calculateScores(answers) {
+  const cityScores = CITIES.map(city => {
+    let total = 0;
+    Object.values(answers).forEach(answerId => { total += city.scores[answerId] || 0; });
+    return { ...city, totalScore: total };
+  });
+  cityScores.sort((a, b) => b.totalScore - a.totalScore);
+  return cityScores.slice(0, 3);
+}
+
+function getRecommendationReason(city, answers) {
+  const reasons = [];
+  const a = answers;
+  const R = (cond, text) => { if (cond) reasons.push(text); };
+  R(a.landscape==="sea" && city.scores.sea>=3, "你向往海岸，而"+city.name+"拥有中国最美的海岸线之一");
+  R(a.landscape==="mountain" && city.scores.mountain>=3, "你喜欢山川，"+city.name+"有令人震撼的山景");
+  R(a.landscape==="lake" && city.scores.lake>=2, "你偏爱湖泊，"+city.name+"的水景会让你流连忘返");
+  R(a.landscape==="desert" && city.scores.desert>=2, "你向往广阔天地，"+city.name+"有辽阔的自然空间");
+  R(a.architecture==="european" && city.scores.european>=2, "你钟爱欧式建筑，"+city.name+"保留了大量精美的西洋建筑");
+  R(a.architecture==="ancient" && city.scores.ancient>=2, "你喜欢古城古镇，"+city.name+"有深厚的历史底蕴");
+  R(a.architecture==="modern" && city.scores.modern>=2, "你欣赏现代设计，"+city.name+"有令人赞叹的当代建筑");
+  R(a.architecture==="ethnic" && city.scores.ethnic>=2, "你喜欢民族风情，"+city.name+"有独特的在地文化体验");
+  R(a.vibe==="slow" && city.scores.slow>=2, "你喜欢慢节奏，"+city.name+"是一座适合发呆的城市");
+  R(a.vibe==="explore" && city.scores.explore>=3, "你喜欢到处探索，"+city.name+"每个角落都有惊喜");
+  R(a.vibe==="intense" && city.scores.intense>=2, "你喜欢密集行程，"+city.name+"有足够多的精彩填满每一天");
+  R(a.vibe==="wild" && city.scores.wild>=2, "你热爱户外冒险，"+city.name+"是绝佳的户外天堂");
+  R(a.food==="spicy" && city.scores.spicy>=3, "你无辣不欢，"+city.name+"的美食会让味蕾起舞");
+  R(a.food==="fresh" && city.scores.fresh>=2, "你偏爱清淡鲜美，"+city.name+"的食材新鲜度不会让你失望");
+  R(a.food==="diverse" && city.scores.diverse>=3, "你什么都想试，"+city.name+"的美食多样性绝对满足你");
+  R(a.food==="cafe" && city.scores.cafe>=2, "你是咖啡甜品控，"+city.name+"有很棒的咖啡文化");
+  R(a.crowd==="avoid" && city.scores.avoid>=2, "你不喜欢人挤人，"+city.name+"相对小众宁静");
+  R(a.crowd==="offbeat" && city.scores.offbeat>=2, "你追求小众体验，"+city.name+"有很多未被发现的角落");
+  R(a.crowd==="love" && city.scores.love>=2, "你喜欢城市活力，"+city.name+"的热闹不会让你失望");
+  R(a.aesthetic==="blue" && city.scores.blue>=2, "你喜欢蓝白色调，"+city.name+"正是你心中的画面");
+  R(a.aesthetic==="green" && city.scores.green>=2, "你偏爱青绿色调，"+city.name+"的山水让你心旷神怡");
+  R(a.aesthetic==="warm" && city.scores.warm>=2, "你喜欢暖黄色调，"+city.name+"有温暖的市井烟火气");
+  R(a.aesthetic==="gray" && city.scores.gray>=2, "你偏爱灰白色调，"+city.name+"有你想要的高级感");
+  if (reasons.length < 2) {
+    reasons.push(city.name+"的整体氛围与你的偏好非常匹配");
+    reasons.push("这座城市的独特气质会给你带来意外的惊喜");
+  }
+  return reasons.slice(0, 3);
+}
+
+// ==================== COMPONENTS ====================
+const MEDAL = ["🥇","🥈","🥉"];
+
+function WelcomeScreen({ onStart }) {
+  const [show, setShow] = useState(false);
+  useEffect(() => { setTimeout(() => setShow(true), 100); }, []);
+  return (
+    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"linear-gradient(160deg,#0f1923 0%,#1a2a3a 40%,#2d3a2e 70%,#1a2a3a 100%)",position:"relative",overflow:"hidden",padding:"40px 20px"}}>
+      <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,background:"radial-gradient(ellipse at 30% 20%,rgba(120,180,200,0.08) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(200,160,100,0.06) 0%,transparent 50%)"}}/>
+      <div style={{opacity:show?1:0,transform:show?"translateY(0)":"translateY(30px)",transition:"all 1.2s cubic-bezier(0.16,1,0.3,1)",textAlign:"center",position:"relative",zIndex:1,maxWidth:600}}>
+        <div style={{fontSize:48,marginBottom:20,letterSpacing:8}}>🏔️ 🌊 🏙️</div>
+        <h1 style={{fontFamily:"'Noto Serif SC',serif",fontSize:"clamp(28px,6vw,44px)",fontWeight:700,color:"#e8dcc8",lineHeight:1.3,marginBottom:16,letterSpacing:3}}>找到你的<br/>命定之城</h1>
+        <p style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:"clamp(14px,3vw,17px)",color:"rgba(232,220,200,0.6)",lineHeight:1.8,marginBottom:12,maxWidth:440,margin:"0 auto 12px"}}>不是每座城市都适合你。</p>
+        <p style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:"clamp(13px,2.8vw,15px)",color:"rgba(232,220,200,0.4)",lineHeight:1.8,marginBottom:48,maxWidth:440,margin:"0 auto 48px"}}>
+          6个问题，从24座城市中找到真正属于你的旅行目的地。<br/>不再浪费时间、金钱和期待。
+        </p>
+        <button onClick={onStart} style={{background:"linear-gradient(135deg,#c8a87c,#a08060)",border:"none",color:"#1a1a1a",padding:"16px 48px",borderRadius:50,fontSize:16,fontWeight:600,cursor:"pointer",letterSpacing:2,fontFamily:"'Noto Sans SC',sans-serif",boxShadow:"0 4px 24px rgba(200,168,124,0.3)",transition:"all 0.3s ease"}}
+          onMouseEnter={e=>{e.target.style.transform="scale(1.05)";e.target.style.boxShadow="0 6px 32px rgba(200,168,124,0.4)";}}
+          onMouseLeave={e=>{e.target.style.transform="scale(1)";e.target.style.boxShadow="0 4px 24px rgba(200,168,124,0.3)";}}
+        >开始测试 →</button>
+        <p style={{color:"rgba(232,220,200,0.25)",fontSize:12,marginTop:24,letterSpacing:1}}>约2分钟 · 24座城市数据库 · 解锁码查看完整推荐</p>
+      </div>
+    </div>
+  );
+}
+
+function QuizScreen({ questions, onComplete }) {
+  const [currentQ, setCurrentQ] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [animating, setAnimating] = useState(false);
+  const [direction, setDirection] = useState("in");
+  const q = questions[currentQ];
+  const progress = ((currentQ) / questions.length) * 100;
+
+  const handleSelect = (optionId) => {
+    if (animating) return;
+    const newAnswers = {...answers, [q.id]: optionId};
+    setAnswers(newAnswers);
+    setAnimating(true);
+    setDirection("out");
+    setTimeout(() => {
+      if (currentQ < questions.length - 1) { setCurrentQ(currentQ+1); setDirection("in"); setTimeout(()=>setAnimating(false),50); }
+      else { onComplete(newAnswers); }
+    }, 400);
+  };
+
+  return (
+    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",background:"linear-gradient(180deg,#0f1923,#1a2a3a)",position:"relative"}}>
+      <div style={{position:"fixed",top:0,left:0,right:0,zIndex:100}}>
+        <div style={{height:3,background:"rgba(255,255,255,0.06)",width:"100%"}}>
+          <div style={{height:"100%",background:"linear-gradient(90deg,#c8a87c,#e8c88c)",width:`${progress}%`,transition:"width 0.6s cubic-bezier(0.16,1,0.3,1)",borderRadius:"0 2px 2px 0"}}/>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 24px"}}>
+          <span style={{color:"rgba(232,220,200,0.4)",fontSize:13,fontFamily:"'Noto Sans SC',sans-serif"}}>{currentQ+1} / {questions.length}</span>
+          {currentQ > 0 && <button onClick={()=>{setCurrentQ(currentQ-1);setDirection("in");}} style={{background:"none",border:"1px solid rgba(232,220,200,0.15)",color:"rgba(232,220,200,0.5)",padding:"6px 16px",borderRadius:20,fontSize:12,cursor:"pointer",fontFamily:"'Noto Sans SC',sans-serif"}}>← 上一题</button>}
+        </div>
+      </div>
+      <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"80px 20px 40px",maxWidth:560,margin:"0 auto",width:"100%",opacity:direction==="out"?0:1,transform:direction==="out"?"translateX(-40px)":"translateX(0)",transition:"all 0.4s cubic-bezier(0.16,1,0.3,1)"}}>
+        <p style={{color:"rgba(232,220,200,0.35)",fontSize:13,marginBottom:12,fontFamily:"'Noto Sans SC',sans-serif",letterSpacing:1}}>{q.subtitle}</p>
+        <h2 style={{fontFamily:"'Noto Serif SC',serif",fontSize:"clamp(22px,5vw,30px)",fontWeight:600,color:"#e8dcc8",textAlign:"center",marginBottom:40,lineHeight:1.5,letterSpacing:1}}>{q.question}</h2>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,width:"100%"}}>
+          {q.options.map((opt,i) => (
+            <button key={opt.id} onClick={()=>handleSelect(opt.id)} style={{background:answers[q.id]===opt.id?"rgba(200,168,124,0.15)":"rgba(255,255,255,0.03)",border:answers[q.id]===opt.id?"1px solid rgba(200,168,124,0.4)":"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"20px 16px",cursor:"pointer",textAlign:"center",transition:"all 0.3s ease",opacity:direction==="out"?0:1,transform:direction==="out"?"scale(0.95)":"scale(1)",transitionDelay:`${i*50}ms`}}
+              onMouseEnter={e=>{if(answers[q.id]!==opt.id){e.currentTarget.style.background="rgba(255,255,255,0.06)";e.currentTarget.style.borderColor="rgba(255,255,255,0.15)";e.currentTarget.style.transform="translateY(-2px)";}}}
+              onMouseLeave={e=>{if(answers[q.id]!==opt.id){e.currentTarget.style.background="rgba(255,255,255,0.03)";e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";e.currentTarget.style.transform="translateY(0)";}}}
+            >
+              <div style={{fontSize:32,marginBottom:8}}>{opt.emoji}</div>
+              <div style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:15,fontWeight:500,color:"#e8dcc8",marginBottom:4}}>{opt.label}</div>
+              <div style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:12,color:"rgba(232,220,200,0.4)"}}>{opt.desc}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== UNLOCK CODE MODAL (替换原支付弹窗) ====================
+function UnlockModal({ results, onUnlock, onClose }) {
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const [shake, setShake] = useState(false);
+
+  const handleSubmit = () => {
+    const trimmed = code.trim().toUpperCase();
+    if (VALID_CODES.includes(trimmed)) {
+      onUnlock();
+    } else {
+      setError("解锁码无效，请检查后重新输入");
+      setShake(true);
+      setTimeout(() => setShake(false), 600);
+    }
+  };
+
+  return (
+    <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div onClick={onClose} style={{position:"absolute",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.7)",backdropFilter:"blur(8px)"}}/>
+      <div style={{position:"relative",background:"linear-gradient(180deg,#1e2d3d,#162230)",border:"1px solid rgba(200,168,124,0.2)",borderRadius:24,padding:"32px 24px",maxWidth:380,width:"100%",textAlign:"center",boxShadow:"0 20px 60px rgba(0,0,0,0.5)"}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"linear-gradient(90deg,transparent,#c8a87c,transparent)",borderRadius:"24px 24px 0 0"}}/>
+        <div style={{fontSize:36,marginBottom:12}}>🔓</div>
+        <h3 style={{fontFamily:"'Noto Serif SC',serif",fontSize:22,color:"#e8dcc8",marginBottom:8,letterSpacing:1}}>解锁完整推荐</h3>
+        <p style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:14,color:"rgba(232,220,200,0.5)",lineHeight:1.7,marginBottom:20}}>
+          你已经看到了第3名推荐城市<br/>
+          输入 <span style={{color:"#c8a87c",fontWeight:600}}>6位解锁码</span> 即可查看第1名和第2名<br/>
+          <span style={{fontSize:12}}>看看哪座城市才是你的命定之城</span>
+        </p>
+
+        {/* Medal preview */}
+        <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:20}}>
+          {results.map((r,i)=>(
+            <div key={r.id} style={{padding:"8px 14px",borderRadius:12,background:i===2?"rgba(200,168,124,0.15)":"rgba(255,255,255,0.03)",border:i===2?"1px solid rgba(200,168,124,0.3)":"1px solid rgba(255,255,255,0.06)"}}>
+              <div style={{fontSize:20}}>{MEDAL[i]}</div>
+              <div style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:13,color:i===2?"#e8dcc8":"rgba(232,220,200,0.3)",marginTop:4}}>{i===2?r.name:"???"}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Code input */}
+        <div style={{marginBottom:16,animation:shake?"shake 0.6s":"none"}}>
+          <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}`}</style>
+          <input
+            value={code}
+            onChange={e=>{setCode(e.target.value.toUpperCase());setError("");}}
+            onKeyDown={e=>e.key==="Enter"&&handleSubmit()}
+            maxLength={6}
+            placeholder="输入6位解锁码"
+            style={{
+              width:"100%",padding:"14px 18px",borderRadius:12,
+              background:"rgba(255,255,255,0.06)",
+              border:error?"1px solid rgba(220,80,80,0.6)":"1px solid rgba(200,168,124,0.3)",
+              color:"#e8dcc8",fontSize:18,textAlign:"center",letterSpacing:4,
+              fontFamily:"'Noto Sans SC',monospace",outline:"none",
+              fontWeight:600,transition:"border 0.3s",
+            }}
+          />
+          {error && <p style={{color:"rgba(220,100,100,0.9)",fontSize:12,marginTop:8,fontFamily:"'Noto Sans SC',sans-serif"}}>{error}</p>}
+        </div>
+
+        <button onClick={handleSubmit} style={{background:"linear-gradient(135deg,#c8a87c,#a08060)",border:"none",color:"#1a1a1a",padding:"14px 40px",borderRadius:30,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"'Noto Sans SC',sans-serif",letterSpacing:1,boxShadow:"0 4px 20px rgba(200,168,124,0.3)",width:"100%",transition:"all 0.3s ease",marginBottom:12}}
+          onMouseEnter={e=>e.target.style.transform="scale(1.02)"}
+          onMouseLeave={e=>e.target.style.transform="scale(1)"}
+        >确认解锁</button>
+        <button onClick={onClose} style={{background:"none",border:"none",color:"rgba(232,220,200,0.3)",padding:"12px",fontSize:13,cursor:"pointer",fontFamily:"'Noto Sans SC',sans-serif"}}>先看看第3名</button>
+      </div>
+    </div>
+  );
+}
+
+function CityCard({ city, index, locked, onView, onPaywall }) {
+  const isLocked = locked && index < 2;
+  return (
+    <div style={{marginBottom:24}}>
+      <div onClick={()=> isLocked ? onPaywall() : onView(city)}
+        style={{background:"rgba(255,255,255,0.03)",border:index===0?"1px solid rgba(200,168,124,0.3)":"1px solid rgba(255,255,255,0.06)",borderRadius:20,overflow:"hidden",cursor:"pointer",transition:"all 0.3s ease",position:"relative"}}
+        onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.06)";e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 8px 32px rgba(0,0,0,0.3)";}}
+        onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.03)";e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}
+      >
+        <div style={{position:"relative",height:160,overflow:"hidden",background:(CITY_VISUALS[city.id]||{}).gradient||"linear-gradient(135deg,#1a2535,#2a3545)"}}>
+          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <span style={{fontSize:52,opacity:0.2,filter:"grayscale(0.3)"}}>{(CITY_VISUALS[city.id]||{}).emoji||"🏙️"}</span>
+          </div>
+          {!isLocked && (
+            <img src={city.image} alt={city.name} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",filter:"brightness(0.7)",zIndex:1}}
+              onError={e=>{e.target.style.opacity='0';}}/>
+          )}
+          <div style={{position:"absolute",top:12,left:12,fontSize:32,zIndex:3}}>{MEDAL[index]}</div>
+          {isLocked && (
+            <div style={{position:"absolute",inset:0,background:"rgba(15,25,35,0.5)",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(4px)",zIndex:2}}>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:32,marginBottom:8}}>🔒</div>
+                <p style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:14,color:"rgba(232,220,200,0.7)"}}>输入解锁码</p>
+              </div>
+            </div>
+          )}
+          {!isLocked && (
+            <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"20px 20px 14px",background:"linear-gradient(transparent,rgba(0,0,0,0.8))",zIndex:2}}>
+              <h3 style={{fontFamily:"'Noto Serif SC',serif",fontSize:26,fontWeight:700,color:"#fff",margin:0,letterSpacing:2}}>{city.name}</h3>
+              <p style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:13,color:"rgba(255,255,255,0.7)",marginTop:2}}>{city.tagline}</p>
+            </div>
+          )}
+        </div>
+        <div style={{padding:"14px 20px 18px"}}>
+          {!isLocked ? (
+            <>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
+                {city.tags.map(tag=>(
+                  <span key={tag} style={{background:"rgba(200,168,124,0.1)",color:"rgba(232,220,200,0.6)",padding:"3px 10px",borderRadius:12,fontSize:12,fontFamily:"'Noto Sans SC',sans-serif"}}>{tag}</span>
+                ))}
+              </div>
+              <span style={{color:"rgba(200,168,124,0.7)",fontSize:13,fontFamily:"'Noto Sans SC',sans-serif"}}>查看详情与行程 →</span>
+            </>
+          ) : (
+            <p style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:13,color:"rgba(232,220,200,0.35)",textAlign:"center",margin:0}}>
+              {index===0?"你的命定之城就在这里":"第二推荐等你解锁"} · 输入解锁码查看
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResultsScreen({ results, answers, onViewCity, onRestart, locked, onPaywall }) {
+  const [show, setShow] = useState(false);
+  useEffect(() => { setTimeout(()=>setShow(true), 200); }, []);
+
+  return (
+    <div style={{minHeight:"100vh",background:"linear-gradient(180deg,#0f1923,#1a2a3a 50%,#0f1923)",padding:"60px 20px"}}>
+      <div style={{maxWidth:600,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:48,opacity:show?1:0,transform:show?"translateY(0)":"translateY(20px)",transition:"all 0.8s cubic-bezier(0.16,1,0.3,1)"}}>
+          <p style={{color:"rgba(200,168,124,0.8)",fontSize:13,letterSpacing:4,marginBottom:16,fontFamily:"'Noto Sans SC',sans-serif"}}>✦ 你的专属推荐 ✦</p>
+          <h2 style={{fontFamily:"'Noto Serif SC',serif",fontSize:"clamp(24px,5vw,34px)",fontWeight:700,color:"#e8dcc8",lineHeight:1.4,letterSpacing:2}}>最适合你的<br/>三座城市</h2>
+          {locked && <p style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:13,color:"rgba(232,220,200,0.35)",marginTop:12}}>免费查看第3名 · 输入解锁码查看前两名</p>}
+        </div>
+
+        {results.map((city, index) => {
+          const reasons = getRecommendationReason(city, answers);
+          const isLocked = locked && index < 2;
+          return (
+            <div key={city.id} style={{opacity:show?1:0,transform:show?"translateY(0)":"translateY(30px)",transition:"all 0.8s cubic-bezier(0.16,1,0.3,1)",transitionDelay:`${300+index*200}ms`}}>
+              <CityCard city={city} index={index} locked={locked} onView={onViewCity} onPaywall={onPaywall} />
+              {!isLocked && (
+                <div style={{padding:"0 8px",marginTop:-12,marginBottom:24}}>
+                  {reasons.map((r,ri)=>(
+                    <p key={ri} style={{color:"rgba(232,220,200,0.45)",fontSize:13,margin:"6px 0",fontFamily:"'Noto Sans SC',sans-serif",lineHeight:1.6,paddingLeft:16,position:"relative"}}>
+                      <span style={{position:"absolute",left:0,color:"rgba(200,168,124,0.4)"}}>·</span>{r}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {locked && (
+          <div style={{textAlign:"center",marginTop:20,opacity:show?1:0,transition:"opacity 1s ease",transitionDelay:"1s"}}>
+            <button onClick={onPaywall} style={{background:"linear-gradient(135deg,#c8a87c,#a08060)",border:"none",color:"#1a1a1a",padding:"14px 40px",borderRadius:30,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"'Noto Sans SC',sans-serif",letterSpacing:1,boxShadow:"0 4px 20px rgba(200,168,124,0.3)",marginBottom:16}}
+              onMouseEnter={e=>e.currentTarget.style.transform="scale(1.03)"}
+              onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}
+            >🔑 输入解锁码，查看第1、2名</button>
+          </div>
+        )}
+
+        <div style={{textAlign:"center",marginTop:24,opacity:show?1:0,transition:"opacity 1s ease",transitionDelay:"1.2s"}}>
+          <button onClick={onRestart} style={{background:"none",border:"1px solid rgba(232,220,200,0.15)",color:"rgba(232,220,200,0.4)",padding:"12px 32px",borderRadius:30,fontSize:14,cursor:"pointer",fontFamily:"'Noto Sans SC',sans-serif",letterSpacing:1}}>重新测试</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CityDetailScreen({ city, onBack }) {
+  const [show, setShow] = useState(false);
+  const [expandedDay, setExpandedDay] = useState(0);
+  useEffect(() => { setTimeout(()=>setShow(true),100); window.scrollTo(0,0); }, []);
+
+  return (
+    <div style={{minHeight:"100vh",background:"linear-gradient(180deg,#0f1923,#1a2a3a)"}}>
+      <div style={{position:"relative",height:280,overflow:"hidden",background:(CITY_VISUALS[city.id]||{}).gradient||"linear-gradient(135deg,#1a2535,#2a3545)"}}>
+        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <span style={{fontSize:80,opacity:0.15}}>{(CITY_VISUALS[city.id]||{}).emoji||"🏙️"}</span>
+        </div>
+        <img src={city.image} alt={city.name} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",filter:"brightness(0.6)",zIndex:1}} onError={e=>{e.target.style.opacity='0';}}/>
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(transparent 40%,#0f1923 100%)",zIndex:2}}/>
+        <button onClick={onBack} style={{position:"absolute",top:20,left:20,background:"rgba(0,0,0,0.4)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,0.15)",color:"rgba(232,220,200,0.8)",padding:"8px 20px",borderRadius:20,fontSize:13,cursor:"pointer",fontFamily:"'Noto Sans SC',sans-serif",zIndex:3}}>← 返回</button>
+        <div style={{position:"absolute",bottom:30,left:0,right:0,textAlign:"center",zIndex:3,opacity:show?1:0,transform:show?"translateY(0)":"translateY(20px)",transition:"all 0.8s cubic-bezier(0.16,1,0.3,1)"}}>
+          <h1 style={{fontFamily:"'Noto Serif SC',serif",fontSize:"clamp(36px,8vw,52px)",fontWeight:700,color:"#fff",margin:"0 0 4px",letterSpacing:6,textShadow:"0 2px 20px rgba(0,0,0,0.5)"}}>{city.name}</h1>
+          <p style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:16,color:"rgba(255,255,255,0.7)",letterSpacing:2}}>{city.tagline}</p>
+        </div>
+      </div>
+      <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:8,padding:"16px 20px 0",opacity:show?1:0,transition:"opacity 0.6s ease",transitionDelay:"200ms"}}>
+        {city.tags.map(tag=>(
+          <span key={tag} style={{background:"rgba(200,168,124,0.1)",color:"rgba(232,220,200,0.6)",padding:"4px 14px",borderRadius:14,fontSize:13,fontFamily:"'Noto Sans SC',sans-serif"}}>{tag}</span>
+        ))}
+      </div>
+      <div style={{maxWidth:600,margin:"0 auto",padding:"0 20px 40px",opacity:show?1:0,transform:show?"translateY(0)":"translateY(20px)",transition:"all 0.8s ease",transitionDelay:"300ms"}}>
+        <p style={{fontFamily:"'Noto Serif SC',serif",fontSize:16,color:"rgba(232,220,200,0.7)",lineHeight:2,textAlign:"justify",padding:"24px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>{city.brief}</p>
+      </div>
+      <div style={{maxWidth:600,margin:"0 auto",padding:"0 20px 60px",opacity:show?1:0,transition:"opacity 0.8s ease",transitionDelay:"500ms"}}>
+        <h2 style={{fontFamily:"'Noto Serif SC',serif",fontSize:22,color:"#e8dcc8",marginBottom:24,letterSpacing:2,textAlign:"center"}}>✦ 5天行程推荐 ✦</h2>
+        {city.itinerary.map((day,di)=>(
+          <div key={di} style={{marginBottom:12,opacity:show?1:0,transform:show?"translateY(0)":"translateY(20px)",transition:"all 0.6s ease",transitionDelay:`${600+di*100}ms`}}>
+            <div onClick={()=>setExpandedDay(expandedDay===di?-1:di)} style={{display:"flex",alignItems:"center",gap:14,padding:"16px 18px",cursor:"pointer",background:expandedDay===di?"rgba(200,168,124,0.08)":"rgba(255,255,255,0.02)",border:expandedDay===di?"1px solid rgba(200,168,124,0.2)":"1px solid rgba(255,255,255,0.04)",borderRadius:expandedDay===di?"16px 16px 0 0":16,transition:"all 0.3s ease"}}>
+              <div style={{width:36,height:36,borderRadius:"50%",background:expandedDay===di?"rgba(200,168,124,0.2)":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:expandedDay===di?"#c8a87c":"rgba(232,220,200,0.5)",fontFamily:"'Noto Sans SC',sans-serif",flexShrink:0,transition:"all 0.3s ease"}}>D{day.day}</div>
+              <div style={{flex:1}}><span style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:15,fontWeight:500,color:"#e8dcc8"}}>{day.title}</span></div>
+              <span style={{color:"rgba(232,220,200,0.3)",fontSize:18,transform:expandedDay===di?"rotate(180deg)":"rotate(0)",transition:"transform 0.3s ease"}}>▾</span>
+            </div>
+            {expandedDay===di && (
+              <div style={{background:"rgba(200,168,124,0.04)",border:"1px solid rgba(200,168,124,0.2)",borderTop:"none",borderRadius:"0 0 16px 16px",padding:"12px 18px 18px"}}>
+                {day.activities.map((act,ai)=>(
+                  <div key={ai} style={{display:"flex",gap:12,padding:"8px 0",borderBottom:ai<day.activities.length-1?"1px solid rgba(255,255,255,0.03)":"none"}}>
+                    <div style={{width:6,height:6,borderRadius:"50%",background:"rgba(200,168,124,0.4)",marginTop:7,flexShrink:0}}/>
+                    <p style={{fontFamily:"'Noto Sans SC',sans-serif",fontSize:14,color:"rgba(232,220,200,0.6)",lineHeight:1.7,margin:0}}>{act}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      <div style={{textAlign:"center",padding:"0 20px 60px",opacity:show?1:0,transition:"opacity 1s ease",transitionDelay:"1s"}}>
+        <button onClick={onBack} style={{background:"linear-gradient(135deg,#c8a87c,#a08060)",border:"none",color:"#1a1a1a",padding:"14px 40px",borderRadius:30,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"'Noto Sans SC',sans-serif",letterSpacing:1,boxShadow:"0 4px 20px rgba(200,168,124,0.3)"}}>← 返回推荐结果</button>
+      </div>
+    </div>
+  );
+}
+
+// ==================== MAIN APP ====================
+function App() {
+  const [screen, setScreen] = useState("welcome");
+  const [answers, setAnswers] = useState({});
+  const [results, setResults] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [locked, setLocked] = useState(true);
+  const [showUnlock, setShowUnlock] = useState(false);
+
+  const handleQuizComplete = (ans) => {
+    setAnswers(ans);
+    setResults(calculateScores(ans));
+    setScreen("results");
+  };
+
+  return (
+    <div style={{fontFamily:"'Noto Sans SC','PingFang SC',sans-serif"}}>
+      {screen==="welcome" && <WelcomeScreen onStart={()=>setScreen("quiz")} />}
+      {screen==="quiz" && <QuizScreen questions={QUESTIONS} onComplete={handleQuizComplete} />}
+      {screen==="results" && (
+        <ResultsScreen results={results} answers={answers}
+          onViewCity={(city)=>{setSelectedCity(city);setScreen("cityDetail");}}
+          onRestart={()=>{setAnswers({});setResults([]);setLocked(true);setScreen("welcome");}}
+          locked={locked}
+          onPaywall={()=>setShowUnlock(true)}
+        />
+      )}
+      {screen==="cityDetail" && <CityDetailScreen city={selectedCity} onBack={()=>setScreen("results")} />}
+      {showUnlock && (
+        <UnlockModal
+          results={results}
+          onUnlock={()=>{setLocked(false);setShowUnlock(false);}}
+          onClose={()=>setShowUnlock(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
